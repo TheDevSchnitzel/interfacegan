@@ -1,3 +1,9 @@
+# Annotation project for in class code review
+(1) Main Project Page: https://genforce.github.io/interfacegan/
+(2) Code Repository: https://github.com/genforce/interfacegan
+(3) According Paper: https://arxiv.org/pdf/1907.10786.pdf
+
+
 # InterFaceGAN - Interpreting the Latent Space of GANs for Semantic Face Editing
 
 ![Python 3.7](https://img.shields.io/badge/python-3.7-green.svg?style=plastic)
