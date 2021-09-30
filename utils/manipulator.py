@@ -48,14 +48,14 @@ def train_boundary(latent_codes,
     if not logger:
         logger = setup_logger(work_dir='', logger_name='train_boundary')
 
-
+    # Consistency check: latent_codes shape
     if (not isinstance(latent_codes, np.ndarray) or
         not len(latent_codes.shape) == 2):
         raise ValueError(f'Input `latent_codes` should be with type'
                         f'`numpy.ndarray`, and shape [num_samples, '
                         f'latent_space_dim]!')
 
-
+    # Consistency check: scores shape
     num_samples = latent_codes.shape[0]
     latent_space_dim = latent_codes.shape[1]
     if (not isinstance(scores, np.ndarray) or not len(scores.shape) == 2 or
@@ -64,18 +64,19 @@ def train_boundary(latent_codes,
                         f'shape [num_samples, 1], where `num_samples` should be '
                         f'exactly same as that of input `latent_codes`!')
 
-
+    # Consistency check: ratio
     if chosen_num_or_ratio <= 0:
         raise ValueError(f'Input `chosen_num_or_ratio` should be positive, '
                         f'but {chosen_num_or_ratio} received!')
 
-
+    # Applying filters
     logger.info(f'Filtering training data.')
     if invalid_value is not None:
         latent_codes = latent_codes[scores[:, 0] != invalid_value]
         scores = scores[scores[:, 0] != invalid_value]
 
 
+    # Sort scores by value to get pos / neg samples 
     logger.info(f'Sorting scores to get positive and negative samples.')
     sorted_idx = np.argsort(scores, axis=0)[::-1, 0]
     latent_codes = latent_codes[sorted_idx]
@@ -109,15 +110,13 @@ def train_boundary(latent_codes,
 
     # Training set.
     train_data = np.concatenate([positive_train, negative_train], axis=0)
-    train_label = np.concatenate([np.ones(train_num, dtype=np.int),
-                                    np.zeros(train_num, dtype=np.int)], axis=0)
+    train_label = np.concatenate([np.ones(train_num, dtype=np.int), np.zeros(train_num, dtype=np.int)], axis=0)
     logger.info(f'  Training: {train_num} positive, {train_num} negative.')
 
 
     # Validation set.
     val_data = np.concatenate([positive_val, negative_val], axis=0)
-    val_label = np.concatenate([np.ones(val_num, dtype=np.int),
-                                np.zeros(val_num, dtype=np.int)], axis=0)
+    val_label = np.concatenate([np.ones(val_num, dtype=np.int), np.zeros(val_num, dtype=np.int)], axis=0)
     logger.info(f'  Validation: {val_num} positive, {val_num} negative.')
 
 
@@ -252,7 +251,10 @@ def linear_interpolate(latent_code,
     """
     assert (latent_code.shape[0] == 1 and boundary.shape[0] == 1 and len(boundary.shape) == 2 and boundary.shape[1] == latent_code.shape[-1])
 
+    # Create |steps| evenly spaced numbers
     linspace = np.linspace(start_distance, end_distance, steps)
+
+    # Manipulate the latent code along the given boundary
     if len(latent_code.shape) == 2:
         linspace = linspace - latent_code.dot(boundary.T)
         linspace = linspace.reshape(-1, 1).astype(np.float32)
@@ -261,7 +263,7 @@ def linear_interpolate(latent_code,
     if len(latent_code.shape) == 3:
         linspace = linspace.reshape(-1, 1, 1).astype(np.float32)
         return latent_code + linspace * boundary.reshape(1, 1, -1)
-        
+
     raise ValueError(f'Input `latent_code` should be with shape '
                     f'[1, latent_space_dim] or [1, N, latent_space_dim] for '
                     f'W+ space in Style GAN!\n'
